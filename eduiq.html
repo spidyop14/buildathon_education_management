@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EduIQ — Academic Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['Manrope', 'sans-serif'],
+          body: ['Inter', 'sans-serif'],
+          mono: ['JetBrains Mono', 'monospace'],
+        },
+        colors: {
+          ink: { 950:'#111114', 900:'#18181C', 800:'#242429', 700:'#34343B', 600:'#4B4B54', 500:'#68686F', 400:'#8C8C93', 300:'#B4B4B9', 200:'#DEDEE1', 150:'#E9E9EB', 100:'#F1F1F2', 50:'#FAFAFA' },
+          cobalt: { 700:'#2C3FB0', 600:'#3450CE', 500:'#4361EE', 400:'#7B92F3', 300:'#AEBCF8', 100:'#E7ECFD', 50:'#F2F5FE' },
+          sage: { 600:'#2F8F5B', 500:'#3DA86D', 100:'#DEF3E7', 50:'#F1FAF5' },
+          amber:{ 600:'#B5730A', 500:'#D4890F', 100:'#FBEBCF', 50:'#FDF6E8' },
+          rose: { 600:'#C23A4B', 500:'#DC4A5B', 100:'#FBDEE2', 50:'#FDF1F2' },
+        },
+        boxShadow: {
+          card: '0 1px 2px rgba(17,17,20,0.04), 0 1px 1px rgba(17,17,20,0.03)',
+          hover: '0 8px 24px rgba(17,17,20,0.08), 0 2px 6px rgba(17,17,20,0.04)',
+          pop: '0 20px 50px rgba(17,17,20,0.16), 0 4px 12px rgba(17,17,20,0.08)',
+        }
+      }
+    }
+  }
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { background:#FAFAFA; }
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb { background:#DEDEE1; border-radius:8px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px);} to { opacity:1; transform:translateY(0);} }
+  @keyframes fadeIn { from { opacity:0;} to { opacity:1;} }
+  @keyframes scaleIn { from { opacity:0; transform:scale(0.96);} to { opacity:1; transform:scale(1);} }
+  @keyframes pulseDot { 0%,100% { opacity:1; transform:scale(1);} 50% { opacity:.5; transform:scale(1.4);} }
+  @keyframes drawLine { from { stroke-dashoffset: 400; } to { stroke-dashoffset: 0; } }
+  @keyframes slideInRight { from { opacity:0; transform:translateX(16px);} to { opacity:1; transform:translateX(0);} }
+  .anim-fadeUp { animation: fadeUp .5s cubic-bezier(.16,1,.3,1) both; }
+  .anim-fadeIn { animation: fadeIn .4s ease both; }
+  .anim-scaleIn { animation: scaleIn .22s cubic-bezier(.16,1,.3,1) both; }
+  .anim-slideInRight { animation: slideInRight .35s cubic-bezier(.16,1,.3,1) both; }
+  .pulse-dot { animation: pulseDot 2s ease-in-out infinite; }
+  .draw-line { stroke-dasharray: 400; animation: drawLine 1.1s cubic-bezier(.16,1,.3,1) forwards; }
+  @media (prefers-reduced-motion: reduce) {
+    .anim-fadeUp, .anim-fadeIn, .anim-scaleIn, .anim-slideInRight, .pulse-dot, .draw-line { animation: none !important; }
+  }
+  .stagger > * { opacity:0; }
+  .stagger.in > *:nth-child(1){ animation: fadeUp .5s cubic-bezier(.16,1,.3,1) .02s both; }
+  .stagger.in > *:nth-child(2){ animation: fadeUp .5s cubic-bezier(.16,1,.3,1) .07s both; }
+  .stagger.in > *:nth-child(3){ animation: fadeUp .5s cubic-bezier(.16,1,.3,1) .12s both; }
+  .stagger.in > *:nth-child(4){ animation: fadeUp .5s cubic-bezier(.16,1,.3,1) .17s both; }
+  .stagger.in > *:nth-child(5){ animation: fadeUp .5s cubic-bezier(.16,1,.3,1) .22s both; }
+  .stagger.in > *:nth-child(6){ animation: fadeUp .5s cubic-bezier(.16,1,.3,1) .27s both; }
+</style>
+</head>
+<body class="font-body text-ink-900">
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react,env">
+const { useState, useEffect, useMemo, useRef, Fragment } = React;
+
+/* ============================== ICONS ============================== */
+const ICONS = {
+  home: "M3 11.5 12 4l9 7.5M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9",
+  book: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13ZM20 17v4H6.5A2.5 2.5 0 0 1 4 18.5",
+  calendar: "M8 2v4M16 2v4M3.5 9h17M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z",
+  clipboard: "M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1ZM6 6h12v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6ZM9 12h6M9 16h6",
+  chart: "M4 19V5M4 19h16M8 19v-6M13 19v-9M18 19v-4",
+  sparkles: "M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3ZM19 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2Z",
+  user: "M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM4.5 20.5c1.4-3.6 4.3-5.5 7.5-5.5s6.1 1.9 7.5 5.5",
+  logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
+  menu: "M3 6h18M3 12h18M3 18h18",
+  x: "M6 6l12 12M18 6 6 18",
+  chevron: "m9 6 6 6-6 6",
+  trendUp: "M3 17 9 11l4 4 8-8M15 7h6v6",
+  trendDown: "M3 7l6 6 4-4 8 8M15 17h6v-6",
+  alert: "M12 3 2 20h20L12 3ZM12 10v4M12 17h.01",
+  check: "m5 13 4 4L19 7",
+  users: "M8 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM3 20c.7-3 2.6-5 5-5s4.3 2 5 5M17 12a3 3 0 1 0 0-6M21 20c-.5-2.3-1.8-4-3.5-4.6",
+  cap: "M2 9 12 4l10 5-10 5L2 9Zm5 3v4.5c0 1.1 2.2 2.5 5 2.5s5-1.4 5-2.5V12",
+  settings: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM4 12a8 8 0 0 1 .2-1.8L2.5 9l1.6-2.8 2 .7A8 8 0 0 1 8 5.3l.3-2.1h3.4L12 5.3a8 8 0 0 1 1.9.6l2-1L17.5 6l-1.7 1.2c.2.6.3 1.2.3 1.8s-.1 1.2-.3 1.8l1.7 1.2-1.6 2.8-2-.9a8 8 0 0 1-1.9.6l-.3 2.1H8.3L8 15.5a8 8 0 0 1-1.9-.6l-2 .9-1.6-2.8 1.7-1.2A8 8 0 0 1 4 12Z",
+  file: "M13 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-6-6ZM13 2v6h6M9 13h6M9 17h6",
+  award: "M12 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10ZM8.2 14 6 22l6-3 6 3-2.2-8",
+  activity: "M22 12h-4l-3 8-6-16-3 8H2",
+  plus: "M12 5v14M5 12h14",
+  search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM21 21l-4.3-4.3",
+  filter: "M4 6h16M7 12h10M10 18h4",
+  bell: "M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 13 6 9ZM9.5 18a2.5 2.5 0 0 0 5 0",
+  arrowRight: "M5 12h14M13 6l6 6-6 6",
+  clock: "M12 7v5l3.5 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z",
+  download: "M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2",
+  mail: "M4 4h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1ZM3 5l9 7 9-7",
+};
+const Icon = ({ name, size=18, className="", strokeWidth=1.8 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d={ICONS[name] || ""} />
+  </svg>
+);
+
+/* ============================== SEED DATA ============================== */
+const TEACHERS = [
+  { id:'t1', name:'Dr. Elena Marsh', dept:'Mathematics', title:'Associate Professor' },
+  { id:'t2', name:'Prof. Raj Patel', dept:'Data Science', title:'Assistant Professor' },
+  { id:'t3', name:'Dr. Amara Osei', dept:'Physics', title:'Professor' },
+  { id:'t4', name:'Dr. Lucia Bianchi', dept:'English', title:'Senior Lecturer' },
+];
+
+const COURSES = [
+  { id:'c1', code:'MATH201', title:'Calculus & Linear Algebra', dept:'Mathematics', credits:4, teacherId:'t1',
+    desc:'Core mathematical foundations covering differential calculus, integral calculus, and linear algebra applications for STEM disciplines.' },
+  { id:'c2', code:'DSCI210', title:'Data Science Fundamentals', dept:'Data Science', credits:4, teacherId:'t2',
+    desc:'An applied introduction to statistics, data wrangling, and machine learning fundamentals using real-world datasets.' },
+  { id:'c3', code:'PHYS150', title:'Physics for Engineers', dept:'Physics', credits:3, teacherId:'t3',
+    desc:'Mechanics, thermodynamics, and electromagnetism with an emphasis on engineering problem-solving.' },
+  { id:'c4', code:'ENGL110', title:'English Composition', dept:'English', credits:3, teacherId:'t4',
+    desc:'Academic writing, rhetoric, and critical analysis across genres.' },
+];
+
+const STUDENT_ME = {
+  id:'s1', name:'Maya Whitfield', code:'STU-1042', year:'Junior · Computer Science', attendance:68,
+  subjects:[
+    { course:'c1', name:'Mathematics', assignmentAvg:54, examAvg:58, examHistory:[64,61,58] },
+    { course:'c2', name:'Data Science', assignmentAvg:82, examAvg:79, examHistory:[70,75,79] },
+    { course:'c3', name:'Physics', assignmentAvg:71, examAvg:68, examHistory:[66,68,68] },
+    { course:'c4', name:'English Composition', assignmentAvg:88, examAvg:85, examHistory:[84,85,85] },
+  ],
+  attendanceLog: Array.from({length:24}).map((_,i)=>{
+    const r = Math.random();
+    return { day:i+1, status: r<0.14 ? 'absent' : r<0.24 ? 'late' : 'present' };
+  }),
+};
+
+const ROSTER = [
+  { id:'s1', name:'Maya Whitfield', attendance:68, avg:71.5 },
+  { id:'s2', name:'Owen Bright', attendance:92, avg:88 },
+  { id:'s3', name:'Priya Nair', attendance:81, avg:76 },
+  { id:'s4', name:'Marcus Chen', attendance:55, avg:49 },
+  { id:'s5', name:'Sofia Torres', attendance:97, avg:91 },
+  { id:'s6', name:'Elena Petrova', attendance:74, avg:63 },
+  { id:'s7', name:'Noah Kim', attendance:88, avg:80 },
+  { id:'s8', name:'Isla Fraser', attendance:63, avg:57 },
+];
+
+const ASSIGNMENTS = [
+  { id:'a1', course:'c1', title:'Problem Set 6 — Integration Techniques', due:'Aug 18', status:'pending', maxScore:100 },
+  { id:'a2', course:'c2', title:'Lab 4 — Exploratory Data Analysis', due:'Aug 20', status:'pending', maxScore:100 },
+  { id:'a3', course:'c3', title:'Lab Report — Kinematics', due:'Aug 12', status:'submitted', score:74, maxScore:100 },
+  { id:'a4', course:'c4', title:'Essay 2 — Rhetorical Analysis', due:'Aug 10', status:'graded', score:91, maxScore:100 },
+  { id:'a5', course:'c1', title:'Problem Set 5 — Series & Sequences', due:'Aug 5', status:'graded', score:52, maxScore:100 },
+];
+
+const EXAMS = [
+  { id:'e1', course:'c1', title:'Midterm Exam', date:'Jul 28', score:58, maxScore:100 },
+  { id:'e2', course:'c2', title:'Midterm Exam', date:'Jul 30', score:79, maxScore:100 },
+  { id:'e3', course:'c3', title:'Midterm Exam', date:'Aug 1', score:68, maxScore:100 },
+  { id:'e4', course:'c4', title:'Midterm Exam', date:'Aug 2', score:85, maxScore:100 },
+  { id:'e5', course:'c1', title:'Final Exam', date:'Sep 15', score:null, maxScore:100 },
+];
+
+const courseById = (id) => COURSES.find(c=>c.id===id);
+const teacherById = (id) => TEACHERS.find(t=>t.id===id);
+
+/* ============================== AI RULES ENGINE ============================== */
+function trend(history){
+  if (!history || history.length<2) return 'flat';
+  const delta = history[history.length-1] - history[0];
+  if (delta >= 6) return 'improving';
+  if (delta <= -6) return 'declining';
+  return 'flat';
+}
+function riskLevel(score){
+  if (score < 60) return 'high';
+  if (score < 70) return 'moderate';
+  return 'low';
+}
+function computeStudentInsights(student){
+  const insights = [];
+  student.subjects.forEach(sub=>{
+    const overall = Math.round((sub.assignmentAvg + sub.examAvg)/2);
+    const t = trend(sub.examHistory);
+    if (overall < 65) {
+      insights.push({
+        id:`weak-${sub.name}`, category:'weak_subject', severity: overall<60?'high':'moderate',
+        title:`${sub.name} is a weak subject`,
+        metric:`Assignment avg ${sub.assignmentAvg}% · Exam avg ${sub.examAvg}%`,
+        recommendation: `Book office hours this week and rework the last two problem sets before the next assessment.`,
+        trend:t,
+      });
+    }
+    if (t==='improving' && overall>=65) {
+      insights.push({
+        id:`up-${sub.name}`, category:'improving', severity:'positive',
+        title:`${sub.name} performance is improving`,
+        metric:`Exam scores trending ${sub.examHistory.join(' → ')}`,
+        recommendation:`Keep the current study routine — this trajectory puts you on track for a strong final grade.`,
+        trend:t,
+      });
+    }
+    if (t==='declining') {
+      insights.push({
+        id:`down-${sub.name}`, category:'declining', severity: overall<65?'high':'moderate',
+        title:`${sub.name} performance is declining`,
+        metric:`Exam scores trending ${sub.examHistory.join(' → ')}`,
+        recommendation:`Identify the specific topics behind the drop and schedule a review session before it compounds.`,
+        trend:t,
+      });
+    }
+  });
+  if (student.attendance < 75) {
+    insights.push({
+      id:'attendance', category:'risk', severity: student.attendance<65?'high':'moderate',
+      title:'Attendance is below the recommended threshold',
+      metric:`Current attendance: ${student.attendance}% (recommended: 75%+)`,
+      recommendation:`Attendance below 75% is linked to a measurable drop in exam performance — prioritize consistent class presence this month.`,
+      trend:'flat',
+    });
+  }
+  const overallRisk = Math.round(
+    (student.subjects.reduce((a,s)=>a+((s.assignmentAvg+s.examAvg)/2),0)/student.subjects.length) * 0.6
+    + student.attendance * 0.4
+  );
+  insights.unshift({
+    id:'overall', category:'risk_summary', severity: riskLevel(overallRisk)==='high'?'high':riskLevel(overallRisk)==='moderate'?'moderate':'positive',
+    title: riskLevel(overallRisk)==='high' ? 'Academic risk: elevated' : riskLevel(overallRisk)==='moderate' ? 'Academic risk: moderate' : 'Academic risk: low',
+    metric:`Composite academic index: ${overallRisk}/100`,
+    recommendation: riskLevel(overallRisk)==='high'
+      ? 'Recommend a check-in with your academic advisor this week to build a recovery plan.'
+      : riskLevel(overallRisk)==='moderate'
+      ? 'A few focused adjustments in your weakest subject should move this back into a comfortable range.'
+      : 'You are on a healthy academic trajectory — maintain current habits.',
+    trend:'flat',
+  });
+  return insights;
+}
+function computeClassInsights(){
+  const atRisk = ROSTER.filter(s=>s.avg<65 || s.attendance<70);
+  const improving = [...ROSTER].sort((a,b)=>b.avg-a.avg)[0];
+  const weakest = [...ROSTER].sort((a,b)=>a.avg-b.avg)[0];
+  const classAvg = Math.round(ROSTER.reduce((a,s)=>a+s.avg,0)/ROSTER.length);
+  return [
+    { id:'ci1', category:'risk_summary', severity: atRisk.length>2?'high':'moderate', title:`${atRisk.length} student${atRisk.length===1?'':'s'} flagged at academic risk`,
+      metric:`Class average: ${classAvg}% · Threshold: 65%`, recommendation:`Prioritize outreach to ${atRisk.map(s=>s.name).slice(0,3).join(', ')}${atRisk.length>3?' and others':''} before the next assessment.` },
+    { id:'ci2', category:'weak_subject', severity:'moderate', title:`${weakest.name} needs the most support`,
+      metric:`Current average: ${weakest.avg}% · Attendance: ${weakest.attendance}%`, recommendation:`Consider a targeted 1:1 review session focused on foundational gaps.` },
+    { id:'ci3', category:'improving', severity:'positive', title:`${improving.name} is leading the class`,
+      metric:`Current average: ${improving.avg}% · Attendance: ${improving.attendance}%`, recommendation:`A strong candidate for peer-mentoring lower-performing students.` },
+  ];
+}
+function computeInstitutionInsights(){
+  const atRisk = ROSTER.filter(s=>s.avg<65 || s.attendance<70).length;
+  return [
+    { id:'ii1', category:'risk_summary', severity:'high', title:`${atRisk} students across sampled cohort flagged at risk`,
+      metric:`Institution-wide average attendance: 79.5%`, recommendation:`Deploy targeted advising outreach to at-risk students in Mathematics and Physics departments.` },
+    { id:'ii2', category:'declining', severity:'moderate', title:'Mathematics department trending down this term',
+      metric:`Department average down 4.2 points vs last term`, recommendation:`Review Mathematics course pacing and consider supplemental tutoring sessions.` },
+    { id:'ii3', category:'improving', severity:'positive', title:'Data Science department trending up this term',
+      metric:`Department average up 6.8 points vs last term`, recommendation:`Document current teaching approach as a potential model for other departments.` },
+  ];
+}
+
+/* ============================== PRIMITIVES ============================== */
+const cx = (...a) => a.filter(Boolean).join(' ');
+
+function Button({ children, variant='primary', size='md', className='', icon, ...rest }){
+  const base = "inline-flex items-center justify-center gap-1.5 font-medium rounded-lg transition-all duration-150 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none";
+  const sizes = { sm:"text-sm px-3 py-1.5", md:"text-sm px-4 py-2.5", lg:"text-base px-5 py-3" };
+  const variants = {
+    primary: "bg-ink-900 text-white hover:bg-ink-800 shadow-card",
+    accent: "bg-cobalt-500 text-white hover:bg-cobalt-600 shadow-card",
+    secondary: "bg-white text-ink-800 border border-ink-150 hover:border-ink-300 hover:bg-ink-50",
+    ghost: "text-ink-600 hover:bg-ink-100 hover:text-ink-900",
+    danger: "bg-white text-rose-600 border border-rose-100 hover:bg-rose-50",
+  };
+  return <button className={cx(base, sizes[size], variants[variant], className)} {...rest}>
+    {icon && <Icon name={icon} size={16} />}{children}
+  </button>;
+}
+
+function Badge({ children, tone='neutral', className='' }){
+  const tones = {
+    neutral:"bg-ink-100 text-ink-600", cobalt:"bg-cobalt-100 text-cobalt-700",
+    sage:"bg-sage-100 text-sage-600", amber:"bg-amber-100 text-amber-600", rose:"bg-rose-100 text-rose-600",
+  };
+  return <span className={cx("inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full", tones[tone], className)}>{children}</span>;
+}
+
+function Card({ children, className='', hover=false, ...rest }){
+  return <div className={cx("bg-white border border-ink-150 rounded-2xl shadow-card", hover && "transition-all duration-200 hover:shadow-hover hover:-translate-y-0.5", className)} {...rest}>{children}</div>;
+}
+
+function StatCard({ label, value, sub, trendDir, delay=0 }){
+  return (
+    <Card className="p-5 anim-fadeUp" style={{animationDelay:`${delay}ms`}} hover>
+      <div className="text-xs font-medium text-ink-500 uppercase tracking-wide">{label}</div>
+      <div className="mt-2 flex items-end justify-between">
+        <span className="font-mono text-3xl font-semibold text-ink-900">{value}</span>
+        {trendDir && (
+          <span className={cx("flex items-center gap-0.5 text-xs font-medium mb-1", trendDir==='up' ? 'text-sage-600' : trendDir==='down' ? 'text-rose-600' : 'text-ink-400')}>
+            <Icon name={trendDir==='up'?'trendUp':trendDir==='down'?'trendDown':'chart'} size={13} strokeWidth={2} />
+          </span>
+        )}
+      </div>
+      {sub && <div className="mt-1 text-xs text-ink-500">{sub}</div>}
+    </Card>
+  );
+}
+
+function ProgressBar({ value, tone='cobalt' }){
+  const tones = { cobalt:'bg-cobalt-500', sage:'bg-sage-500', amber:'bg-amber-500', rose:'bg-rose-500' };
+  return (
+    <div className="w-full h-1.5 bg-ink-100 rounded-full overflow-hidden">
+      <div className={cx("h-full rounded-full transition-all duration-700 ease-out", tones[tone])} style={{width:`${value}%`}}></div>
+    </div>
+  );
+}
+
+function EmptyState({ icon='file', title, sub, action }){
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-16 px-6 anim-fadeIn">
+      <div className="w-12 h-12 rounded-full bg-ink-100 flex items-center justify-center text-ink-400 mb-4">
+        <Icon name={icon} size={22} />
+      </div>
+      <h3 className="font-display font-semibold text-ink-800">{title}</h3>
+      {sub && <p className="text-sm text-ink-500 mt-1.5 max-w-sm">{sub}</p>}
+      {action}
+    </div>
+  );
+}
+
+function ComingSoon({ title }){
+  return <EmptyState icon="settings" title={`${title} is in development`} sub="This section is scoped for a later build phase and intentionally left out of this pass rather than shipped half-built." />;
+}
+
+function Toast({ toasts }){
+  return (
+    <div className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 items-end">
+      {toasts.map(t=>(
+        <div key={t.id} className="anim-slideInRight bg-ink-900 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-pop flex items-center gap-2">
+          <Icon name="check" size={15} className="text-sage-400" />{t.msg}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Modal({ open, onClose, title, children, wide }){
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-ink-950/40 anim-fadeIn" onClick={onClose}></div>
+      <div className={cx("relative bg-white rounded-2xl shadow-pop w-full anim-scaleIn max-h-[85vh] overflow-y-auto", wide ? "max-w-2xl" : "max-w-md")}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-ink-150 sticky top-0 bg-white rounded-t-2xl">
+          <h3 className="font-display font-semibold text-ink-900">{title}</h3>
+          <button onClick={onClose} className="text-ink-400 hover:text-ink-800 transition-colors"><Icon name="x" size={18} /></button>
+        </div>
+        <div className="p-6">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ---- Insight Card (signature component) ---- */
+function severityColor(sev){
+  return { high:'rose', moderate:'amber', positive:'sage', low:'sage' }[sev] || 'cobalt';
+}
+function InsightCard({ insight, delay=0 }){
+  const tone = severityColor(insight.severity);
+  const dotColor = { rose:'bg-rose-500', amber:'bg-amber-500', sage:'bg-sage-500', cobalt:'bg-cobalt-500' }[tone];
+  const borderColor = { rose:'border-l-rose-500', amber:'border-l-amber-500', sage:'border-l-sage-500', cobalt:'border-l-cobalt-500' }[tone];
+  const trendIcon = insight.trend==='improving' ? 'trendUp' : insight.trend==='declining' ? 'trendDown' : null;
+  return (
+    <Card className={cx("p-5 border-l-4 anim-fadeUp", borderColor)} style={{animationDelay:`${delay}ms`}} hover>
+      <div className="flex items-start gap-3">
+        <span className={cx("mt-1.5 w-2 h-2 rounded-full flex-shrink-0 pulse-dot", dotColor)}></span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="font-display font-semibold text-ink-900 text-[15px]">{insight.title}</h4>
+            {trendIcon && <Icon name={trendIcon} size={15} className={tone==='sage'?'text-sage-500':'text-rose-500'} />}
+          </div>
+          <p className="font-mono text-xs text-ink-500 mt-1.5">{insight.metric}</p>
+          <p className="text-sm text-ink-600 mt-2.5 leading-relaxed">{insight.recommendation}</p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/* ---- Simple SVG charts (no external chart lib needed) ---- */
+function LineChart({ data, width=100, height=64, color="#4361EE" }){
+  const max = Math.max(...data, 100), min = Math.min(...data, 0);
+  const pts = data.map((v,i)=>{
+    const x = (i/(data.length-1))*width;
+    const y = height - ((v-min)/(max-min || 1))*height;
+    return `${x},${y}`;
+  }).join(' ');
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-16 overflow-visible">
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="draw-line" />
+      {data.map((v,i)=>{
+        const x = (i/(data.length-1))*width;
+        const y = height - ((v-min)/(max-min || 1))*height;
+        return <circle key={i} cx={x} cy={y} r="2.5" fill={color} />;
+      })}
+    </svg>
+  );
+}
+function BarChart({ data, labels, color="#4361EE" }){
+  const max = Math.max(...data.map(d=>d), 100);
+  return (
+    <div className="flex items-end gap-3 h-40 px-1">
+      {data.map((v,i)=>(
+        <div key={i} className="flex-1 flex flex-col items-center gap-2">
+          <div className="w-full flex-1 flex items-end">
+            <div className="w-full rounded-t-md transition-all duration-700 ease-out" style={{height:`${(v/max)*100}%`, background:color, minHeight:'4px'}}></div>
+          </div>
+          <span className="text-[11px] text-ink-500 font-medium">{labels[i]}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ============================== SHELL: SIDEBAR / TOPBAR ============================== */
+const NAV = {
+  student: [
+    { key:'dashboard', label:'Dashboard', icon:'home' },
+    { key:'courses', label:'Courses', icon:'book' },
+    { key:'assignments', label:'Assignments', icon:'clipboard' },
+    { key:'attendance', label:'Attendance', icon:'calendar' },
+    { key:'examinations', label:'Examinations', icon:'award' },
+    { key:'progress', label:'Progress', icon:'chart' },
+    { key:'intelligence', label:'Academic Intelligence', icon:'sparkles' },
+    { key:'profile', label:'Profile', icon:'user' },
+  ],
+  teacher: [
+    { key:'dashboard', label:'Dashboard', icon:'home' },
+    { key:'classes', label:'Classes', icon:'users' },
+    { key:'attendance', label:'Attendance', icon:'calendar' },
+    { key:'assignments', label:'Assignments', icon:'clipboard' },
+    { key:'submissions', label:'Submissions', icon:'file' },
+    { key:'examinations', label:'Examinations', icon:'award' },
+    { key:'students', label:'Students', icon:'cap' },
+    { key:'insights', label:'Academic Insights', icon:'sparkles' },
+    { key:'profile', label:'Profile', icon:'user' },
+  ],
+  admin: [
+    { key:'dashboard', label:'Dashboard', icon:'home' },
+    { key:'students', label:'Students', icon:'cap' },
+    { key:'teachers', label:'Teachers', icon:'users' },
+    { key:'courses', label:'Courses', icon:'book' },
+    { key:'classes', label:'Classes', icon:'calendar' },
+    { key:'examinations', label:'Examinations', icon:'award' },
+    { key:'records', label:'Academic Records', icon:'file' },
+    { key:'analytics', label:'Analytics', icon:'chart' },
+    { key:'reports', label:'Reports', icon:'clipboard' },
+    { key:'aiinsights', label:'AI Insights', icon:'sparkles' },
+    { key:'activity', label:'Activity', icon:'activity' },
+  ],
+};
+
+function Sidebar({ role, page, setPage, mobileOpen, setMobileOpen, onLogout }){
+  const items = NAV[role];
+  const roleLabel = { student:'Student', teacher:'Teacher', admin:'Administrator' }[role];
+  const nameLabel = role==='student' ? STUDENT_ME.name : role==='teacher' ? 'Dr. Elena Marsh' : 'System Admin';
+  return (
+    <Fragment>
+      {mobileOpen && <div className="fixed inset-0 bg-ink-950/50 z-40 md:hidden anim-fadeIn" onClick={()=>setMobileOpen(false)}></div>}
+      <aside className={cx(
+        "fixed md:sticky top-0 h-screen w-64 bg-ink-950 text-ink-200 flex flex-col z-50 transition-transform duration-300 md:translate-x-0",
+        mobileOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="flex items-center gap-2.5 px-5 h-16 border-b border-white/10 flex-shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-cobalt-500 flex items-center justify-center flex-shrink-0">
+            <Icon name="sparkles" size={15} className="text-white" />
+          </div>
+          <span className="font-display font-bold text-white text-[15px] tracking-tight">EduIQ</span>
+          <button className="ml-auto md:hidden text-ink-400" onClick={()=>setMobileOpen(false)}><Icon name="x" size={18} /></button>
+        </div>
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+          {items.map(item=>(
+            <button key={item.key} onClick={()=>{setPage(item.key); setMobileOpen(false);}}
+              className={cx("w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative",
+                page===item.key ? "bg-white/[0.08] text-white" : "text-ink-400 hover:text-ink-100 hover:bg-white/[0.04]")}>
+              {page===item.key && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-cobalt-400 rounded-r-full"></span>}
+              <Icon name={item.icon} size={17} />
+              {item.label}
+            </button>
+          ))}
+        </nav>
+        <div className="px-3 pb-4 pt-2 border-t border-white/10">
+          <div className="flex items-center gap-2.5 px-3 py-2">
+            <div className="w-8 h-8 rounded-full bg-cobalt-500/20 text-cobalt-300 flex items-center justify-center text-xs font-semibold font-mono flex-shrink-0">
+              {nameLabel.split(' ').map(n=>n[0]).slice(0,2).join('')}
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm text-white font-medium truncate">{nameLabel}</div>
+              <div className="text-xs text-ink-500">{roleLabel}</div>
+            </div>
+          </div>
+          <button onClick={onLogout} className="w-full flex items-center gap-3 px-3 py-2 mt-1 rounded-lg text-sm text-ink-400 hover:text-white hover:bg-white/[0.04] transition-colors">
+            <Icon name="logout" size={16} />Switch role
+          </button>
+        </div>
+      </aside>
+    </Fragment>
+  );
+}
+
+function Topbar({ title, sub, setMobileOpen, actions }){
+  return (
+    <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-ink-150 px-5 md:px-8 h-16 flex items-center justify-between flex-shrink-0">
+      <div className="flex items-center gap-3 min-w-0">
+        <button className="md:hidden text-ink-600" onClick={()=>setMobileOpen(true)}><Icon name="menu" size={20} /></button>
+        <div className="min-w-0">
+          <h1 className="font-display font-semibold text-ink-900 text-[17px] truncate">{title}</h1>
+          {sub && <p className="text-xs text-ink-500 truncate">{sub}</p>}
+        </div>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0">{actions}</div>
+    </div>
+  );
+}
+
+/* ============================== APP SHELL PER ROLE ============================== */
+function AppShell({ role, onLogout }){
+  const [page, setPage] = useState('dashboard');
+  const [mobileOpen, setMobileOpen] = useState(false);
+  useEffect(()=>{ window.scrollTo(0,0); }, [page]);
+
+  const pages = {
+    student: {
+      dashboard: <StudentDashboard setPage={setPage} />,
+      courses: <StudentCourses />,
+      assignments: <StudentAssignments />,
+      attendance: <StudentAttendance />,
+      examinations: <StudentExaminations />,
+      progress: <StudentProgress />,
+      intelligence: <StudentIntelligence />,
+      profile: <ProfilePage name={STUDENT_ME.name} role="Student" sub={STUDENT_ME.code + ' · ' + STUDENT_ME.year} />,
+    },
+    teacher: {
+      dashboard: <TeacherDashboard setPage={setPage} />,
+      classes: <TeacherClasses />,
+      attendance: <TeacherAttendance />,
+      assignments: <TeacherAssignments />,
+      submissions: <TeacherSubmissions />,
+      examinations: <TeacherExaminations />,
+      students: <TeacherStudents />,
+      insights: <TeacherInsights />,
+      profile: <ProfilePage name="Dr. Elena Marsh" role="Teacher" sub="Mathematics Department · Associate Professor" />,
+    },
+    admin: {
+      dashboard: <AdminDashboard setPage={setPage} />,
+      students: <AdminStudents />,
+      teachers: <AdminTeachers />,
+      courses: <AdminCourses />,
+      classes: <ComingSoon title="Class scheduling" />,
+      examinations: <ComingSoon title="Examination administration" />,
+      records: <ComingSoon title="Academic records archive" />,
+      analytics: <AdminAnalytics />,
+      reports: <ComingSoon title="Comparative reports" />,
+      aiinsights: <AdminAIInsights />,
+      activity: <ComingSoon title="Activity monitoring" />,
+    },
+  };
+
+  const titles = {
+    student: { dashboard:['Dashboard','Welcome back, Maya'], courses:['Courses','Browse and manage your enrollments'], assignments:['Assignments','Track submissions and deadlines'], attendance:['Attendance','Your session-by-session record'], examinations:['Examinations','Upcoming and past results'], progress:['Progress','Your academic trajectory'], intelligence:['Academic Intelligence','AI-powered insights from your real performance data'], profile:['Profile','Manage your account'] },
+    teacher: { dashboard:['Dashboard','Welcome back, Dr. Marsh'], classes:['Classes','Your active class sections'], attendance:['Attendance','Record and review attendance'], assignments:['Assignments','Create and manage coursework'], submissions:['Submissions','Review and grade student work'], examinations:['Examinations','Manage exams and enter marks'], students:['Students','Roster performance overview'], insights:['Academic Insights','AI-powered class-level intelligence'], profile:['Profile','Manage your account'] },
+    admin: { dashboard:['Dashboard','Institution overview'], students:['Students','Manage student records'], teachers:['Teachers','Manage faculty records'], courses:['Courses','Manage the course catalog'], classes:['Classes','Class scheduling'], examinations:['Examinations','Examination administration'], records:['Academic Records','Records archive'], analytics:['Analytics','Institution-wide performance'], reports:['Reports','Comparative analysis'], aiinsights:['AI Insights','Institution-wide academic intelligence'], activity:['Activity','System activity monitoring'] },
+  };
+  const [t, s] = titles[role][page];
+
+  return (
+    <div className="flex min-h-screen bg-ink-50">
+      <Sidebar role={role} page={page} setPage={setPage} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} onLogout={onLogout} />
+      <div className="flex-1 min-w-0 flex flex-col">
+        <Topbar title={t} sub={s} setMobileOpen={setMobileOpen} actions={
+          <Fragment>
+            <button className="w-9 h-9 rounded-lg flex items-center justify-center text-ink-500 hover:bg-ink-100 transition-colors relative">
+              <Icon name="bell" size={17} />
+              <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-cobalt-500 rounded-full"></span>
+            </button>
+          </Fragment>
+        } />
+        <main className="flex-1 p-5 md:p-8 max-w-6xl w-full mx-auto">
+          {pages[role][page]}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== STUDENT PAGES ============================== */
+function SectionHeading({ children, action }){
+  return <div className="flex items-center justify-between mb-4"><h2 className="font-display font-semibold text-ink-900 text-lg">{children}</h2>{action}</div>;
+}
+
+function StudentDashboard({ setPage }){
+  const insights = useMemo(()=>computeStudentInsights(STUDENT_ME).slice(0,2), []);
+  const overallAvg = Math.round(STUDENT_ME.subjects.reduce((a,s)=>a+((s.assignmentAvg+s.examAvg)/2),0)/STUDENT_ME.subjects.length);
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 stagger in">
+        <StatCard label="Overall Average" value={`${overallAvg}%`} sub="Across 4 courses" trendDir="flat" />
+        <StatCard label="Attendance" value={`${STUDENT_ME.attendance}%`} sub="Below 75% target" trendDir="down" />
+        <StatCard label="Pending Assignments" value={ASSIGNMENTS.filter(a=>a.status==='pending').length} sub="Due this week" />
+        <StatCard label="Upcoming Exams" value={EXAMS.filter(e=>e.score===null).length} sub="Final exam Sep 15" />
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-5">
+        <Card className="p-6 md:col-span-2 anim-fadeUp" style={{animationDelay:'80ms'}}>
+          <SectionHeading action={<Button variant="ghost" size="sm" onClick={()=>setPage('progress')}>View progress<Icon name="arrowRight" size={14}/></Button>}>Subject Performance</SectionHeading>
+          <BarChart data={STUDENT_ME.subjects.map(s=>Math.round((s.assignmentAvg+s.examAvg)/2))} labels={STUDENT_ME.subjects.map(s=>s.name.split(' ')[0])} color="#4361EE" />
+        </Card>
+        <Card className="p-6 anim-fadeUp" style={{animationDelay:'140ms'}}>
+          <SectionHeading>Attendance Snapshot</SectionHeading>
+          <div className="flex items-center justify-center py-4">
+            <div className="relative w-28 h-28">
+              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#E9E9EB" strokeWidth="10" />
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#D4890F" strokeWidth="10" strokeLinecap="round"
+                  strokeDasharray={`${2*Math.PI*42}`} strokeDashoffset={`${2*Math.PI*42*(1-STUDENT_ME.attendance/100)}`} className="transition-all duration-1000 ease-out" />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center font-mono text-xl font-semibold text-ink-900">{STUDENT_ME.attendance}%</div>
+            </div>
+          </div>
+          <p className="text-xs text-ink-500 text-center">Recommended threshold: 75%</p>
+        </Card>
+      </div>
+
+      <div>
+        <SectionHeading action={<Button variant="ghost" size="sm" onClick={()=>setPage('intelligence')}>Full report<Icon name="arrowRight" size={14}/></Button>}>
+          <span className="flex items-center gap-2"><Icon name="sparkles" size={17} className="text-cobalt-500" />Academic Intelligence</span>
+        </SectionHeading>
+        <div className="grid md:grid-cols-2 gap-4">
+          {insights.map((ins,i)=><InsightCard key={ins.id} insight={ins} delay={i*70} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StudentCourses(){
+  const [active, setActive] = useState(null);
+  const enrolled = STUDENT_ME.subjects.map(s=>courseById(s.course));
+  return (
+    <div className="space-y-5">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-4 stagger in">
+        {enrolled.map(c=>{
+          const sub = STUDENT_ME.subjects.find(s=>s.course===c.id);
+          return (
+            <Card key={c.id} className="p-5 cursor-pointer" hover onClick={()=>setActive(c)}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <Badge tone="cobalt">{c.code}</Badge>
+                  <h3 className="font-display font-semibold text-ink-900 mt-2">{c.title}</h3>
+                  <p className="text-xs text-ink-500 mt-1">{teacherById(c.teacherId).name} · {c.credits} credits</p>
+                </div>
+              </div>
+              <div className="mt-4 flex items-center gap-2">
+                <ProgressBar value={sub.examAvg} tone={sub.examAvg<65?'rose':sub.examAvg<75?'amber':'sage'} />
+                <span className="font-mono text-xs text-ink-500 flex-shrink-0">{sub.examAvg}%</span>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+      <Modal open={!!active} onClose={()=>setActive(null)} title={active?.code} wide>
+        {active && (
+          <div className="space-y-4">
+            <h3 className="font-display font-semibold text-xl text-ink-900">{active.title}</h3>
+            <p className="text-sm text-ink-600 leading-relaxed">{active.desc}</p>
+            <div className="grid grid-cols-3 gap-3 pt-2">
+              <div className="bg-ink-50 rounded-xl p-3"><div className="text-xs text-ink-500">Instructor</div><div className="text-sm font-medium mt-0.5">{teacherById(active.teacherId).name}</div></div>
+              <div className="bg-ink-50 rounded-xl p-3"><div className="text-xs text-ink-500">Department</div><div className="text-sm font-medium mt-0.5">{active.dept}</div></div>
+              <div className="bg-ink-50 rounded-xl p-3"><div className="text-xs text-ink-500">Credits</div><div className="text-sm font-medium mt-0.5">{active.credits}</div></div>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
+
+function StudentAssignments(){
+  const [toasts, setToasts] = useState([]);
+  const [submitting, setSubmitting] = useState(null);
+  const [statusMap, setStatusMap] = useState({});
+  const push = (msg) => { const id = Date.now(); setToasts(t=>[...t,{id,msg}]); setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)), 3000); };
+  const tone = (status) => status==='graded' ? 'sage' : status==='submitted' ? 'cobalt' : 'amber';
+  return (
+    <div className="space-y-3">
+      {ASSIGNMENTS.map((a,i)=>{
+        const c = courseById(a.course);
+        const status = statusMap[a.id] || a.status;
+        return (
+          <Card key={a.id} className="p-4 flex items-center justify-between gap-4 anim-fadeUp" style={{animationDelay:`${i*40}ms`}} hover>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge tone="neutral">{c.code}</Badge>
+                <Badge tone={tone(status)}>{status}</Badge>
+              </div>
+              <h4 className="font-medium text-ink-900 truncate">{a.title}</h4>
+              <p className="text-xs text-ink-500 mt-0.5">Due {a.due}{a.score!=null ? ` · Score ${a.score}/${a.maxScore}` : ''}</p>
+            </div>
+            {status==='pending' ? (
+              <Button size="sm" variant="accent" onClick={()=>setSubmitting(a)}>Submit</Button>
+            ) : (
+              <Icon name="check" size={18} className="text-sage-500 flex-shrink-0" />
+            )}
+          </Card>
+        );
+      })}
+      <Modal open={!!submitting} onClose={()=>setSubmitting(null)} title="Submit assignment">
+        {submitting && (
+          <div className="space-y-4">
+            <p className="text-sm text-ink-600">{submitting.title}</p>
+            <div className="border-2 border-dashed border-ink-200 rounded-xl p-8 text-center text-ink-400">
+              <Icon name="file" size={24} className="mx-auto mb-2" />
+              <p className="text-sm">Drop a file or click to upload</p>
+            </div>
+            <Button className="w-full" variant="accent" onClick={()=>{
+              setStatusMap(m=>({...m,[submitting.id]:'submitted'}));
+              push(`${submitting.title} submitted`);
+              setSubmitting(null);
+            }}>Confirm submission</Button>
+          </div>
+        )}
+      </Modal>
+      <Toast toasts={toasts} />
+    </div>
+  );
+}
+
+function StudentAttendance(){
+  const present = STUDENT_ME.attendanceLog.filter(d=>d.status==='present').length;
+  const late = STUDENT_ME.attendanceLog.filter(d=>d.status==='late').length;
+  const absent = STUDENT_ME.attendanceLog.filter(d=>d.status==='absent').length;
+  const colorFor = { present:'bg-sage-500', late:'bg-amber-500', absent:'bg-rose-500' };
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-3 gap-4">
+        <StatCard label="Present" value={present} sub={`${Math.round(present/24*100)}% of sessions`} />
+        <StatCard label="Late" value={late} sub={`${Math.round(late/24*100)}% of sessions`} />
+        <StatCard label="Absent" value={absent} sub={`${Math.round(absent/24*100)}% of sessions`} />
+      </div>
+      <Card className="p-6">
+        <SectionHeading>Session Log</SectionHeading>
+        <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
+          {STUDENT_ME.attendanceLog.map((d,i)=>(
+            <div key={i} className={cx("aspect-square rounded-lg flex items-center justify-center text-white text-xs font-mono font-medium", colorFor[d.status])} title={`Session ${d.day}: ${d.status}`}>
+              {d.day}
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center gap-4 mt-4 text-xs text-ink-500">
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-sage-500"></span>Present</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>Late</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-rose-500"></span>Absent</span>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function StudentExaminations(){
+  return (
+    <div className="space-y-3">
+      {EXAMS.map((e,i)=>{
+        const c = courseById(e.course);
+        return (
+          <Card key={e.id} className="p-4 flex items-center justify-between anim-fadeUp" style={{animationDelay:`${i*40}ms`}} hover>
+            <div>
+              <div className="flex items-center gap-2 mb-1"><Badge tone="neutral">{c.code}</Badge></div>
+              <h4 className="font-medium text-ink-900">{e.title}</h4>
+              <p className="text-xs text-ink-500 mt-0.5">{e.date}</p>
+            </div>
+            {e.score!=null ? (
+              <div className="text-right">
+                <div className="font-mono text-lg font-semibold text-ink-900">{e.score}<span className="text-ink-400 text-sm">/{e.maxScore}</span></div>
+                <Badge tone={e.score<65?'rose':e.score<75?'amber':'sage'}>{e.score<65?'Needs work':e.score<75?'Fair':'Good'}</Badge>
+              </div>
+            ) : <Badge tone="cobalt">Upcoming</Badge>}
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function StudentProgress(){
+  return (
+    <div className="grid md:grid-cols-2 gap-5">
+      {STUDENT_ME.subjects.map((s,i)=>(
+        <Card key={s.name} className="p-6 anim-fadeUp" style={{animationDelay:`${i*70}ms`}}>
+          <div className="flex items-center justify-between mb-1">
+            <h4 className="font-display font-semibold text-ink-900">{s.name}</h4>
+            <Badge tone={trend(s.examHistory)==='improving'?'sage':trend(s.examHistory)==='declining'?'rose':'neutral'}>
+              {trend(s.examHistory)}
+            </Badge>
+          </div>
+          <p className="text-xs text-ink-500 mb-3">Exam score trend across term</p>
+          <LineChart data={s.examHistory} color={trend(s.examHistory)==='improving'?'#3DA86D':trend(s.examHistory)==='declining'?'#DC4A5B':'#4361EE'} />
+          <div className="flex justify-between mt-2 text-xs font-mono text-ink-400">
+            {s.examHistory.map((v,idx)=><span key={idx}>{v}%</span>)}
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function StudentIntelligence(){
+  const insights = useMemo(()=>computeStudentInsights(STUDENT_ME), []);
+  return (
+    <div className="space-y-6">
+      <Card className="p-6 bg-gradient-to-br from-ink-950 to-ink-800 border-none anim-fadeUp">
+        <div className="flex items-center gap-2 text-cobalt-300 text-xs font-medium uppercase tracking-wide mb-2">
+          <Icon name="sparkles" size={14} />Generated from your real academic data
+        </div>
+        <p className="text-white text-sm leading-relaxed max-w-2xl">
+          This analysis is derived from your attendance record, assignment scores, and examination history across all enrolled courses — not generic advice. Every insight below traces back to a specific number.
+        </p>
+      </Card>
+      <div className="grid md:grid-cols-2 gap-4">
+        {insights.map((ins,i)=><InsightCard key={ins.id} insight={ins} delay={i*60} />)}
+      </div>
+    </div>
+  );
+}
+
+function ProfilePage({ name, role, sub }){
+  return (
+    <Card className="p-8 max-w-lg anim-fadeUp">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-full bg-cobalt-100 text-cobalt-600 flex items-center justify-center font-mono font-semibold text-xl">
+          {name.split(' ').map(n=>n[0]).slice(0,2).join('')}
+        </div>
+        <div>
+          <h3 className="font-display font-semibold text-lg text-ink-900">{name}</h3>
+          <p className="text-sm text-ink-500">{sub}</p>
+        </div>
+      </div>
+      <div className="mt-6 space-y-3">
+        {[['Role', role], ['Email', name.toLowerCase().replace(' ','.')+'@eduiq.edu'], ['Status', 'Active']].map(([k,v])=>(
+          <div key={k} className="flex justify-between py-2.5 border-b border-ink-100 text-sm">
+            <span className="text-ink-500">{k}</span><span className="font-medium text-ink-900">{v}</span>
+          </div>
+        ))}
+      </div>
+      <Button variant="secondary" className="mt-6 w-full">Edit profile</Button>
+    </Card>
+  );
+}
+
+/* ============================== TEACHER PAGES ============================== */
+function TeacherDashboard({ setPage }){
+  const insights = useMemo(()=>computeClassInsights().slice(0,2), []);
+  const classAvg = Math.round(ROSTER.reduce((a,s)=>a+s.avg,0)/ROSTER.length);
+  const atRisk = ROSTER.filter(s=>s.avg<65 || s.attendance<70).length;
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 stagger in">
+        <StatCard label="Active Classes" value="4" sub="This term" />
+        <StatCard label="Total Students" value={ROSTER.length} sub="Across sections" />
+        <StatCard label="Class Average" value={`${classAvg}%`} trendDir="flat" />
+        <StatCard label="At-Risk Students" value={atRisk} sub="Flagged by AI" trendDir={atRisk>2?'down':'flat'} />
+      </div>
+      <Card className="p-6 anim-fadeUp" style={{animationDelay:'80ms'}}>
+        <SectionHeading action={<Button variant="ghost" size="sm" onClick={()=>setPage('students')}>View roster<Icon name="arrowRight" size={14}/></Button>}>Class Performance Distribution</SectionHeading>
+        <BarChart data={ROSTER.map(s=>s.avg)} labels={ROSTER.map(s=>s.name.split(' ')[0])} color="#4361EE" />
+      </Card>
+      <div>
+        <SectionHeading action={<Button variant="ghost" size="sm" onClick={()=>setPage('insights')}>Full report<Icon name="arrowRight" size={14}/></Button>}>
+          <span className="flex items-center gap-2"><Icon name="sparkles" size={17} className="text-cobalt-500" />Academic Insights</span>
+        </SectionHeading>
+        <div className="grid md:grid-cols-2 gap-4">{insights.map((ins,i)=><InsightCard key={ins.id} insight={ins} delay={i*70} />)}</div>
+      </div>
+    </div>
+  );
+}
+
+function TeacherClasses(){
+  return (
+    <div className="grid sm:grid-cols-2 gap-4 stagger in">
+      {COURSES.map(c=>(
+        <Card key={c.id} className="p-5" hover>
+          <Badge tone="cobalt">{c.code}</Badge>
+          <h3 className="font-display font-semibold text-ink-900 mt-2">{c.title}</h3>
+          <p className="text-xs text-ink-500 mt-1">{ROSTER.length} students enrolled</p>
+          <div className="flex items-center justify-between mt-4 text-xs text-ink-500">
+            <span>Term: Fall 2026</span>
+            <span className="font-mono">{c.credits} cr</span>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function TeacherAttendance(){
+  const [marks, setMarks] = useState(Object.fromEntries(ROSTER.map(s=>[s.id,'present'])));
+  const [toasts, setToasts] = useState([]);
+  const push = (msg) => { const id = Date.now(); setToasts(t=>[...t,{id,msg}]); setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)), 2500); };
+  const cycle = (id) => setMarks(m=>({...m, [id]: m[id]==='present'?'late':m[id]==='late'?'absent':'present'}));
+  const styles = { present:'bg-sage-100 text-sage-600', late:'bg-amber-100 text-amber-600', absent:'bg-rose-100 text-rose-600' };
+  return (
+    <Card className="p-6 anim-fadeUp">
+      <SectionHeading action={<Button variant="accent" size="sm" onClick={()=>push('Attendance saved for today')}>Save attendance</Button>}>Today — Mathematics 201</SectionHeading>
+      <div className="divide-y divide-ink-100">
+        {ROSTER.map(s=>(
+          <div key={s.id} className="flex items-center justify-between py-3">
+            <span className="text-sm font-medium text-ink-800">{s.name}</span>
+            <button onClick={()=>cycle(s.id)} className={cx("text-xs font-medium px-3 py-1.5 rounded-full capitalize transition-colors w-24", styles[marks[s.id]])}>
+              {marks[s.id]}
+            </button>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-ink-400 mt-3">Tap a status to cycle present → late → absent.</p>
+      <Toast toasts={toasts} />
+    </Card>
+  );
+}
+
+function TeacherAssignments(){
+  const [open, setOpen] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const push = (msg) => { const id = Date.now(); setToasts(t=>[...t,{id,msg}]); setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)), 2500); };
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end"><Button variant="accent" icon="plus" onClick={()=>setOpen(true)}>New assignment</Button></div>
+      <div className="space-y-3">
+        {ASSIGNMENTS.filter(a=>a.course==='c1').map((a,i)=>(
+          <Card key={a.id} className="p-4 flex items-center justify-between anim-fadeUp" style={{animationDelay:`${i*40}ms`}} hover>
+            <div>
+              <h4 className="font-medium text-ink-900">{a.title}</h4>
+              <p className="text-xs text-ink-500 mt-0.5">Due {a.due} · Max {a.maxScore} pts</p>
+            </div>
+            <Badge tone={a.status==='graded'?'sage':a.status==='submitted'?'cobalt':'amber'}>{a.status}</Badge>
+          </Card>
+        ))}
+      </div>
+      <Modal open={open} onClose={()=>setOpen(false)} title="Create assignment">
+        <div className="space-y-3">
+          <input className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cobalt-300" placeholder="Assignment title" />
+          <input className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cobalt-300" placeholder="Due date" />
+          <Button variant="accent" className="w-full" onClick={()=>{ push('Assignment created'); setOpen(false); }}>Create</Button>
+        </div>
+      </Modal>
+      <Toast toasts={toasts} />
+    </div>
+  );
+}
+
+function TeacherSubmissions(){
+  const [grade, setGrade] = useState(null);
+  const [toasts, setToasts] = useState([]);
+  const push = (msg) => { const id = Date.now(); setToasts(t=>[...t,{id,msg}]); setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)), 2500); };
+  const submitted = ROSTER.slice(0,5).map((s,i)=>({ student:s.name, id:s.id, submittedAt:'2 days ago', graded: i<2 }));
+  return (
+    <div className="space-y-3">
+      {submitted.map((s,i)=>(
+        <Card key={s.id} className="p-4 flex items-center justify-between anim-fadeUp" style={{animationDelay:`${i*40}ms`}} hover>
+          <div>
+            <h4 className="font-medium text-ink-900">{s.student}</h4>
+            <p className="text-xs text-ink-500 mt-0.5">Problem Set 6 · submitted {s.submittedAt}</p>
+          </div>
+          {s.graded ? <Badge tone="sage">Graded</Badge> : <Button size="sm" variant="secondary" onClick={()=>setGrade(s)}>Review & grade</Button>}
+        </Card>
+      ))}
+      <Modal open={!!grade} onClose={()=>setGrade(null)} title="Grade submission">
+        {grade && (
+          <div className="space-y-4">
+            <p className="text-sm text-ink-600">{grade.student} · Problem Set 6</p>
+            <div className="bg-ink-50 rounded-xl p-4 text-sm text-ink-500 font-mono">submission_ps6.pdf</div>
+            <input type="number" placeholder="Score out of 100" className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cobalt-300" />
+            <textarea placeholder="Feedback" rows="3" className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cobalt-300"></textarea>
+            <Button variant="accent" className="w-full" onClick={()=>{ push(`Grade submitted for ${grade.student}`); setGrade(null); }}>Submit grade</Button>
+          </div>
+        )}
+      </Modal>
+      <Toast toasts={toasts} />
+    </div>
+  );
+}
+
+function TeacherExaminations(){
+  return (
+    <Card className="p-6 overflow-x-auto anim-fadeUp">
+      <SectionHeading>Midterm — Mathematics 201 · Marks entry</SectionHeading>
+      <table className="w-full text-sm">
+        <thead><tr className="text-left text-ink-500 border-b border-ink-150"><th className="pb-2 font-medium">Student</th><th className="pb-2 font-medium">Score</th><th className="pb-2 font-medium">Status</th></tr></thead>
+        <tbody>
+          {ROSTER.map(s=>(
+            <tr key={s.id} className="border-b border-ink-100 last:border-0">
+              <td className="py-2.5 text-ink-800">{s.name}</td>
+              <td className="py-2.5 font-mono text-ink-800">{s.avg}</td>
+              <td className="py-2.5"><Badge tone={s.avg<65?'rose':s.avg<75?'amber':'sage'}>{s.avg<65?'Fail':s.avg<75?'Pass':'Merit'}</Badge></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+}
+
+function TeacherStudents(){
+  return (
+    <Card className="p-6 overflow-x-auto anim-fadeUp">
+      <table className="w-full text-sm">
+        <thead><tr className="text-left text-ink-500 border-b border-ink-150"><th className="pb-2 font-medium">Student</th><th className="pb-2 font-medium">Attendance</th><th className="pb-2 font-medium">Average</th><th className="pb-2 font-medium">Status</th></tr></thead>
+        <tbody>
+          {ROSTER.map(s=>{
+            const risk = s.avg<65 || s.attendance<70;
+            return (
+              <tr key={s.id} className="border-b border-ink-100 last:border-0">
+                <td className="py-3 text-ink-800 font-medium">{s.name}</td>
+                <td className="py-3 font-mono text-ink-600">{s.attendance}%</td>
+                <td className="py-3 font-mono text-ink-600">{s.avg}%</td>
+                <td className="py-3"><Badge tone={risk?'rose':'sage'}>{risk?'At risk':'On track'}</Badge></td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </Card>
+  );
+}
+
+function TeacherInsights(){
+  const insights = useMemo(()=>computeClassInsights(), []);
+  return (
+    <div className="space-y-6">
+      <Card className="p-6 bg-gradient-to-br from-ink-950 to-ink-800 border-none anim-fadeUp">
+        <div className="flex items-center gap-2 text-cobalt-300 text-xs font-medium uppercase tracking-wide mb-2"><Icon name="sparkles" size={14} />Class-level analysis</div>
+        <p className="text-white text-sm leading-relaxed max-w-2xl">Computed from live attendance, assignment, and exam data across your Mathematics 201 roster.</p>
+      </Card>
+      <div className="grid md:grid-cols-2 gap-4">{insights.map((ins,i)=><InsightCard key={ins.id} insight={ins} delay={i*60} />)}</div>
+    </div>
+  );
+}
+
+/* ============================== ADMIN PAGES ============================== */
+function AdminDashboard({ setPage }){
+  const insights = useMemo(()=>computeInstitutionInsights().slice(0,2), []);
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 stagger in">
+        <StatCard label="Total Students" value="1,248" trendDir="up" sub="+42 this term" />
+        <StatCard label="Total Teachers" value="86" sub="Across 6 departments" />
+        <StatCard label="Active Courses" value="34" sub="Fall 2026" />
+        <StatCard label="At-Risk Students" value="97" trendDir="down" sub="Flagged institution-wide" />
+      </div>
+      <Card className="p-6 anim-fadeUp" style={{animationDelay:'80ms'}}>
+        <SectionHeading action={<Button variant="ghost" size="sm" onClick={()=>setPage('analytics')}>Full analytics<Icon name="arrowRight" size={14}/></Button>}>Department Averages</SectionHeading>
+        <BarChart data={[71,84,68,88]} labels={['Math','Data Sci','Physics','English']} color="#4361EE" />
+      </Card>
+      <div>
+        <SectionHeading action={<Button variant="ghost" size="sm" onClick={()=>setPage('aiinsights')}>Full report<Icon name="arrowRight" size={14}/></Button>}>
+          <span className="flex items-center gap-2"><Icon name="sparkles" size={17} className="text-cobalt-500" />AI Insights</span>
+        </SectionHeading>
+        <div className="grid md:grid-cols-2 gap-4">{insights.map((ins,i)=><InsightCard key={ins.id} insight={ins} delay={i*70} />)}</div>
+      </div>
+    </div>
+  );
+}
+
+function AdminStudents(){
+  const [q, setQ] = useState('');
+  const filtered = ROSTER.filter(s=>s.name.toLowerCase().includes(q.toLowerCase()));
+  return (
+    <Card className="p-6 anim-fadeUp">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="relative flex-1 max-w-xs">
+          <Icon name="search" size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
+          <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search students..." className="w-full border border-ink-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cobalt-300" />
+        </div>
+        <Button variant="secondary" size="sm" icon="filter">Filter</Button>
+        <Button variant="accent" size="sm" icon="plus" className="ml-auto">Add student</Button>
+      </div>
+      <table className="w-full text-sm">
+        <thead><tr className="text-left text-ink-500 border-b border-ink-150"><th className="pb-2 font-medium">Name</th><th className="pb-2 font-medium">Attendance</th><th className="pb-2 font-medium">Average</th><th className="pb-2 font-medium">Status</th><th></th></tr></thead>
+        <tbody>
+          {filtered.map(s=>{
+            const risk = s.avg<65 || s.attendance<70;
+            return (
+              <tr key={s.id} className="border-b border-ink-100 last:border-0">
+                <td className="py-3 text-ink-800 font-medium">{s.name}</td>
+                <td className="py-3 font-mono text-ink-600">{s.attendance}%</td>
+                <td className="py-3 font-mono text-ink-600">{s.avg}%</td>
+                <td className="py-3"><Badge tone={risk?'rose':'sage'}>{risk?'At risk':'On track'}</Badge></td>
+                <td className="py-3 text-right"><button className="text-ink-400 hover:text-ink-800"><Icon name="chevron" size={16}/></button></td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </Card>
+  );
+}
+
+function AdminTeachers(){
+  return (
+    <Card className="p-6 anim-fadeUp overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead><tr className="text-left text-ink-500 border-b border-ink-150"><th className="pb-2 font-medium">Name</th><th className="pb-2 font-medium">Department</th><th className="pb-2 font-medium">Title</th><th className="pb-2 font-medium">Courses</th></tr></thead>
+        <tbody>
+          {TEACHERS.map(t=>(
+            <tr key={t.id} className="border-b border-ink-100 last:border-0">
+              <td className="py-3 text-ink-800 font-medium">{t.name}</td>
+              <td className="py-3 text-ink-600">{t.dept}</td>
+              <td className="py-3 text-ink-600">{t.title}</td>
+              <td className="py-3 font-mono text-ink-600">{COURSES.filter(c=>c.teacherId===t.id).length}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Card>
+  );
+}
+
+function AdminCourses(){
+  return (
+    <div className="grid sm:grid-cols-2 gap-4 stagger in">
+      {COURSES.map(c=>(
+        <Card key={c.id} className="p-5" hover>
+          <div className="flex items-start justify-between">
+            <div>
+              <Badge tone="cobalt">{c.code}</Badge>
+              <h3 className="font-display font-semibold text-ink-900 mt-2">{c.title}</h3>
+              <p className="text-xs text-ink-500 mt-1">{teacherById(c.teacherId).name}</p>
+            </div>
+            <button className="text-ink-400 hover:text-ink-800"><Icon name="settings" size={16}/></button>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function AdminAnalytics(){
+  return (
+    <div className="grid md:grid-cols-2 gap-5">
+      <Card className="p-6 anim-fadeUp">
+        <SectionHeading>Department Averages</SectionHeading>
+        <BarChart data={[71,84,68,88]} labels={['Math','Data Sci','Physics','English']} color="#4361EE" />
+      </Card>
+      <Card className="p-6 anim-fadeUp" style={{animationDelay:'70ms'}}>
+        <SectionHeading>Term-over-term GPA Trend</SectionHeading>
+        <LineChart data={[3.1,3.15,3.05,3.22,3.3]} color="#4361EE" />
+        <div className="flex justify-between mt-2 text-xs font-mono text-ink-400"><span>Spr24</span><span>Fall24</span><span>Spr25</span><span>Fall25</span><span>Spr26</span></div>
+      </Card>
+      <Card className="p-6 md:col-span-2 anim-fadeUp" style={{animationDelay:'140ms'}}>
+        <SectionHeading>Attendance Distribution by Department</SectionHeading>
+        <BarChart data={[76,88,71,85]} labels={['Math','Data Sci','Physics','English']} color="#D4890F" />
+      </Card>
+    </div>
+  );
+}
+
+function AdminAIInsights(){
+  const insights = useMemo(()=>computeInstitutionInsights(), []);
+  return (
+    <div className="space-y-6">
+      <Card className="p-6 bg-gradient-to-br from-ink-950 to-ink-800 border-none anim-fadeUp">
+        <div className="flex items-center gap-2 text-cobalt-300 text-xs font-medium uppercase tracking-wide mb-2"><Icon name="sparkles" size={14} />Institution-wide analysis</div>
+        <p className="text-white text-sm leading-relaxed max-w-2xl">Aggregated across all departments from live attendance, assignment, and examination records.</p>
+      </Card>
+      <div className="grid md:grid-cols-2 gap-4">{insights.map((ins,i)=><InsightCard key={ins.id} insight={ins} delay={i*60} />)}</div>
+    </div>
+  );
+}
+
+/* ============================== PUBLIC SITE ============================== */
+function PublicNav({ setView }){
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-ink-150">
+      <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+        <button className="flex items-center gap-2" onClick={()=>setView({page:'home'})}>
+          <div className="w-7 h-7 rounded-lg bg-cobalt-500 flex items-center justify-center"><Icon name="sparkles" size={15} className="text-white" /></div>
+          <span className="font-display font-bold text-ink-900">EduIQ</span>
+        </button>
+        <div className="hidden md:flex items-center gap-7 text-sm font-medium text-ink-600">
+          <button className="hover:text-ink-900 transition-colors" onClick={()=>setView({page:'courses'})}>Courses</button>
+          <button className="hover:text-ink-900 transition-colors" onClick={()=>setView({page:'contact'})}>Contact</button>
+        </div>
+        <Button variant="primary" size="sm" onClick={()=>setView({page:'login'})}>Sign in</Button>
+      </div>
+    </div>
+  );
+}
+
+function HomePage({ setView }){
+  return (
+    <div>
+      <section className="max-w-6xl mx-auto px-5 md:px-8 pt-20 pb-24 md:pt-28 md:pb-32">
+        <div className="max-w-2xl anim-fadeUp">
+          <Badge tone="cobalt" className="mb-5">Academic Intelligence, built in</Badge>
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-ink-950 tracking-tight leading-[1.1]">
+            Education management that actually understands your students.
+          </h1>
+          <p className="mt-5 text-ink-600 text-lg leading-relaxed">
+            EduIQ manages courses, attendance, assignments, and exams — then reads the patterns across them to tell students, teachers, and administrators exactly what needs attention next.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button variant="accent" size="lg" onClick={()=>setView({page:'login'})}>Get started<Icon name="arrowRight" size={16}/></Button>
+            <Button variant="secondary" size="lg" onClick={()=>setView({page:'courses'})}>Browse courses</Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-24">
+        <Card className="p-6 md:p-8 anim-fadeUp">
+          <div className="flex items-center gap-2 text-cobalt-600 text-xs font-medium uppercase tracking-wide mb-4">
+            <Icon name="sparkles" size={14} />Sample intelligence output
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <InsightCard insight={{ id:'demo1', category:'weak_subject', severity:'high', title:'Mathematics is a weak subject', metric:'Assignment avg 54% · Exam avg 58%', recommendation:'Book office hours this week and rework the last two problem sets before the next assessment.', trend:'declining' }} />
+            <InsightCard insight={{ id:'demo2', category:'improving', severity:'positive', title:'Data Science performance is improving', metric:'Exam scores trending 70 → 75 → 79', recommendation:'Keep the current study routine — this trajectory puts you on track for a strong final grade.', trend:'improving' }} />
+          </div>
+        </Card>
+      </section>
+
+      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-28">
+        <h2 className="font-display font-semibold text-2xl text-ink-900 mb-8">Built for every role</h2>
+        <div className="grid md:grid-cols-3 gap-5">
+          {[
+            { icon:'user', role:'Students', desc:'Track courses, submit assignments, and get personalized study recommendations grounded in your own performance data.' },
+            { icon:'users', role:'Teachers', desc:'Manage classes, record attendance, grade submissions, and see which students need attention before it is too late.' },
+            { icon:'cap', role:'Administrators', desc:'Institution-wide analytics and academic risk detection across every department, course, and cohort.' },
+          ].map((r,i)=>(
+            <Card key={r.role} className="p-6 anim-fadeUp" style={{animationDelay:`${i*80}ms`}} hover>
+              <div className="w-10 h-10 rounded-xl bg-cobalt-100 text-cobalt-600 flex items-center justify-center mb-4"><Icon name={r.icon} size={19}/></div>
+              <h3 className="font-display font-semibold text-ink-900 mb-1.5">{r.role}</h3>
+              <p className="text-sm text-ink-600 leading-relaxed">{r.desc}</p>
+            </Card>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function PublicCourses({ setView }){
+  return (
+    <div className="max-w-6xl mx-auto px-5 md:px-8 py-16">
+      <h1 className="font-display font-bold text-3xl text-ink-950 mb-2">Course Catalog</h1>
+      <p className="text-ink-600 mb-8">Browse what's available this term.</p>
+      <div className="grid sm:grid-cols-2 gap-4 stagger in">
+        {COURSES.map(c=>(
+          <Card key={c.id} className="p-5" hover onClick={()=>setView({page:'courseDetail', id:c.id})} style={{cursor:'pointer'}}>
+            <Badge tone="cobalt">{c.code}</Badge>
+            <h3 className="font-display font-semibold text-ink-900 mt-2">{c.title}</h3>
+            <p className="text-sm text-ink-500 mt-1.5 line-clamp-2">{c.desc}</p>
+            <p className="text-xs text-ink-400 mt-3">{teacherById(c.teacherId).name} · {c.credits} credits</p>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PublicCourseDetail({ id, setView }){
+  const c = courseById(id);
+  return (
+    <div className="max-w-3xl mx-auto px-5 md:px-8 py-16 anim-fadeUp">
+      <button className="text-sm text-ink-500 hover:text-ink-800 flex items-center gap-1 mb-6" onClick={()=>setView({page:'courses'})}>← Back to courses</button>
+      <Badge tone="cobalt">{c.code}</Badge>
+      <h1 className="font-display font-bold text-3xl text-ink-950 mt-3">{c.title}</h1>
+      <p className="text-ink-600 mt-4 leading-relaxed">{c.desc}</p>
+      <div className="grid grid-cols-3 gap-3 mt-6">
+        <div className="bg-white border border-ink-150 rounded-xl p-4"><div className="text-xs text-ink-500">Instructor</div><div className="text-sm font-medium mt-1">{teacherById(c.teacherId).name}</div></div>
+        <div className="bg-white border border-ink-150 rounded-xl p-4"><div className="text-xs text-ink-500">Department</div><div className="text-sm font-medium mt-1">{c.dept}</div></div>
+        <div className="bg-white border border-ink-150 rounded-xl p-4"><div className="text-xs text-ink-500">Credits</div><div className="text-sm font-medium mt-1">{c.credits}</div></div>
+      </div>
+      <Button variant="accent" size="lg" className="mt-8" onClick={()=>setView({page:'login'})}>Enroll — sign in to continue</Button>
+    </div>
+  );
+}
+
+function PublicContact(){
+  return (
+    <div className="max-w-lg mx-auto px-5 md:px-8 py-16 anim-fadeUp">
+      <h1 className="font-display font-bold text-3xl text-ink-950 mb-2">Contact</h1>
+      <p className="text-ink-600 mb-8">Questions about EduIQ? Reach out.</p>
+      <Card className="p-6 space-y-3">
+        <input placeholder="Your name" className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cobalt-300" />
+        <input placeholder="Email" className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cobalt-300" />
+        <textarea placeholder="Message" rows="4" className="w-full border border-ink-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cobalt-300"></textarea>
+        <Button variant="accent" className="w-full" icon="mail">Send message</Button>
+      </Card>
+    </div>
+  );
+}
+
+function LoginPage({ onLogin }){
+  const [role, setRole] = useState(null);
+  return (
+    <div className="min-h-[80vh] flex items-center justify-center px-5 py-16">
+      <Card className="p-8 w-full max-w-sm anim-scaleIn">
+        <div className="w-10 h-10 rounded-xl bg-cobalt-500 flex items-center justify-center mb-5"><Icon name="sparkles" size={19} className="text-white"/></div>
+        <h1 className="font-display font-bold text-2xl text-ink-950">Sign in to EduIQ</h1>
+        <p className="text-sm text-ink-500 mt-1.5 mb-6">Demo mode — choose a role to explore its experience.</p>
+        <div className="space-y-2.5">
+          {[
+            { key:'student', label:'Student', icon:'user', desc:'Maya Whitfield' },
+            { key:'teacher', label:'Teacher', icon:'users', desc:'Dr. Elena Marsh' },
+            { key:'admin', label:'Administrator', icon:'cap', desc:'System Admin' },
+          ].map(r=>(
+            <button key={r.key} onClick={()=>setRole(r.key)}
+              className={cx("w-full flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all duration-150",
+                role===r.key ? "border-cobalt-400 bg-cobalt-50" : "border-ink-150 hover:border-ink-300")}>
+              <div className={cx("w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0", role===r.key ? "bg-cobalt-500 text-white" : "bg-ink-100 text-ink-500")}>
+                <Icon name={r.icon} size={17}/>
+              </div>
+              <div>
+                <div className="text-sm font-medium text-ink-900">{r.label}</div>
+                <div className="text-xs text-ink-500">{r.desc}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+        <Button variant="accent" className="w-full mt-5" disabled={!role} onClick={()=>onLogin(role)}>Continue<Icon name="arrowRight" size={15}/></Button>
+      </Card>
+    </div>
+  );
+}
+
+/* ============================== ROOT APP ============================== */
+function App(){
+  const [session, setSession] = useState(null);
+  const [view, setView] = useState({ page:'home' });
+
+  if (session) {
+    return <AppShell role={session} onLogout={()=>setSession(null)} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-ink-50">
+      <PublicNav setView={setView} />
+      {view.page==='home' && <HomePage setView={setView} />}
+      {view.page==='courses' && <PublicCourses setView={setView} />}
+      {view.page==='courseDetail' && <PublicCourseDetail id={view.id} setView={setView} />}
+      {view.page==='contact' && <PublicContact />}
+      {view.page==='login' && <LoginPage onLogin={(role)=>setSession(role)} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
